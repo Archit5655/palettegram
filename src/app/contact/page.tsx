@@ -4,7 +4,7 @@ import Navbar from "@/components/core/navbar";
 import { toastify } from "@/helper/toastify";
 import { FormEvent, useState } from "react";
 
-const contact = () => {
+const Contact = () => {
   const [message, setmessage] = useState("");
   const [email, setemail] = useState("");
   const [ispending, setpending] = useState(false);
@@ -87,4 +87,4 @@ const contact = () => {
   );
 };
 
-export default contact;
+export default Contact;
