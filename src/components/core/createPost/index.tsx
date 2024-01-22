@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { addPost } from "@/redux/reducers/postsReducer";
 import { PostInstanceType } from "@/types/index.d";
 import isCtrlEnter from "@/helper/isCtrlEnter";
+import { motion } from "framer-motion";
 
 const CHAR_LIMIT = 500;
 
@@ -78,7 +79,7 @@ const CreatePost = () => {
 
     // console.log(postTitle);
     // console.log(imageStorage);
-    // console.log(cookies["userId"]);
+    // console.log(cookies["accountId"]);
 
     try {
       let imageURL: string = "";
@@ -93,7 +94,7 @@ const CreatePost = () => {
         imageURL = getImageUrl(getFileObject["$id"])!;
       }
 
-      const userIdFromCookies: string = cookies["userId"];
+      const userIdFromCookies: string = cookies["accountId"];
       const imageArray = [imageURL];
       //console.log(imageArray);
 
@@ -102,6 +103,7 @@ const CreatePost = () => {
         postTitle: postTitle,
         postImages: imageArray.length > 0 ? imageArray : [],
         colors: [],
+        isActive: true,
         comments: [],
         likes: [],
       };
@@ -121,7 +123,6 @@ const CreatePost = () => {
         file: null,
       });
 
-
       // state resetters
     } catch (error) {
       console.log(error);
@@ -137,11 +138,10 @@ const CreatePost = () => {
     const fileObj = event.target.files[0];
     reader.readAsDataURL(fileObj);
 
-    if(fileObj.size > 1000000){
+    if (fileObj.size > 1000000) {
       toastify("Image size should be less than 1MB", "error");
       return;
-    }
-    else{
+    } else {
       reader.onload = () => {
         if (reader.readyState === 2) {
           setimageStorage((prev: any) => {
@@ -153,7 +153,7 @@ const CreatePost = () => {
           });
         }
       };
-    }  
+    }
   };
 
   const colorPaletteSwitch = () => {
@@ -172,7 +172,13 @@ const CreatePost = () => {
 
   return (
     <>
-      <section className="border border-gray-500 rounded-md shadow-sm mb-4">
+      <motion.section
+        initial={{ opacity: 0, y: -350 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.1, type: "spring", stiffness: 110 }}
+        className="border border-gray-500 rounded-md shadow-sm mb-4"
+      >
         <form className="p-4" method="post" onSubmit={handleSubmit}>
           <div className="mb-2">
             {/* <small className="text-slate-400">Character limit is upto {CHAR_LIMIT}</small> */}
@@ -244,7 +250,7 @@ const CreatePost = () => {
             </article>
           </div>
         </form>
-      </section>
+      </motion.section>
     </>
   );
 };

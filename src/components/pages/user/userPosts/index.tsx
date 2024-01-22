@@ -1,11 +1,16 @@
 import Loader from "@/app/loading";
+import { removePost } from "@/backend/posts.api";
+import { toastify } from "@/helper/toastify";
+import { removeUserPost } from "@/redux/reducers/postsReducer";
 import { PostInstanceType } from "@/types";
 import Image from "next/image";
-import { Suspense, useState } from "react";
-import { Bookmark, Download, Heart, MessageCircle, Share } from "react-feather";
-import { useSelector } from "react-redux";
+import Link from "next/link";
+import { Suspense } from "react";
+import { Bookmark, Download, Heart, MessageCircle, Share, Trash2 } from "react-feather";
+import { useSelector, useDispatch } from "react-redux";
 
 type FormatOnType = "seconds" | "minutes" | "hours" | "days";
+
 interface UserPostsProps {
   userId: string;
   userName: string;
@@ -13,8 +18,25 @@ interface UserPostsProps {
 
 export default function UserPosts({ userId, userName }: UserPostsProps) {
   const userPosts = useSelector((store: any) => store.posts.posts).filter(
-    (post: PostInstanceType) => post.accountId === userId,
+    (post: PostInstanceType) => post.accountId === userId && post.isActive === true,
   );
+  console.log(userPosts);
+
+  const dispatch = useDispatch();
+
+  async function deleteHandler(id: string) {
+    console.log(id);
+    try {
+      const response = await removePost(id);
+      if (response) {
+        console.log(response);
+        dispatch(removeUserPost(response.$id));
+        toastify("Post deleted sucessfully", "success");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   function createdAtDateFormatter(postCreationTime: string) {
     const timeObj = {
@@ -42,7 +64,6 @@ export default function UserPosts({ userId, userName }: UserPostsProps) {
       return `${timeObj.calcTimeDiff("days") / 365}y`;
     }
   }
-  console.log(userPosts);
   return (
     <>
       <main className="w-full h-full">
@@ -57,24 +78,34 @@ export default function UserPosts({ userId, userName }: UserPostsProps) {
                   >
                     <section className="flex w-full h-full justify-start items-start gap-3 ">
                       <div className="h-full flex flex-col">
-                        <Image
-                          src="/assets/user.png"
-                          alt="user"
-                          width={40}
-                          height={40}
-                          className="object-contain border p-0.5 rounded-full bg-slate-500"
-                        />
+                        <Link href={`/user/${post?.accountId}`}>
+                          <Image
+                            src="/assets/user.png"
+                            alt="user"
+                            width={40}
+                            height={40}
+                            className="object-contain border p-0.5 rounded-full bg-slate-500"
+                          />
+                        </Link>
+
                         <div className="my-[2px] w-px h-full self-center bg-neutral-400 dark:bg-neutral-500 rounded-3xl" />
                       </div>
 
                       <section className=" flex h-auto w-full flex-col items-start">
-                        <div className="flex gap-1 text-lg items-baseline">
-                          <p className=" font-semibold">{userName}</p>
+                        <div className="flex justify-between text-lg  w-full mb-2">
+                          <Link href={`/user/${post?.accountId}`}>
+                            <p className=" font-semibold">{userName}</p>
+                          </Link>
 
-                          <p className="text-base text-neutral-600 dark:text-neutral-400 pl-1">
-                            &#183; {`${createdAtDateFormatter(post?.$createdAt)} ago`}
+                          <p className="text-[13px] text-neutral-600 dark:text-neutral-400 ">
+                            {`${createdAtDateFormatter(post?.$createdAt)} ago`}
                           </p>
                         </div>
+                        <Trash2
+                          onClick={() => deleteHandler(post.$id)}
+                          size={24}
+                          cursor={"pointer"}
+                        />
 
                         <p className="text-neutral-900 dark:text-neutral-200">{post?.postTitle}</p>
                         <div className="h-auto w-full relative mt-2">

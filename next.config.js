@@ -7,15 +7,21 @@ const nextConfig = {
     };
     return config;
   },
-  reactServerComponents: {
-    use: ["@react-email/tailwind"],
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     domains: ["cloud.appwrite.io"],
   },
+
+  experimental: {
+    serverComponentsExternalPackages: [
+      "@react-email/components",
+      "@react-email/render",
+      "@react-email/html",
+    ],
+  },
+  transpilePackages: ["@react-email/components", "@react-email/render", "@react-email/html"],
 };
 
 module.exports = nextConfig;

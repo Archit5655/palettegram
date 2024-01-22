@@ -1,26 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { GitHub, User } from "react-feather";
-import { isLoggedIn } from "@/backend/auth.api";
+import { getCurrentUser } from "@/backend/auth.api";
 import { saveUser } from "@/redux/reducers/authReducer";
 import { Menu, X } from "react-feather";
 import ThemeButton from "@/components/core/themeButton";
 import { ButtonLong } from "@/components/core/buttons";
 import { parseCookies } from "nookies";
+import { toastify } from "@/helper/toastify";
+import { motion } from "framer-motion";
 
-function HomePage() {
-  const router = useRouter();
+function HomePage({ starCount }: { starCount: number }) {
   const dispatch = useDispatch();
   const cookies = parseCookies();
-  const userIdFromCookies: string = cookies["userId"];
+  const accountIdFromCookies: string = cookies["accountId"];
 
   const state = useSelector((state: any) => state.auth);
-
-  const [stars, setStars] = useState(0);
 
   const [isMenuOpen, setMenuOpen] = useState(false);
 
@@ -29,29 +27,27 @@ function HomePage() {
   };
 
   useEffect(() => {
-    fetch("https://api.github.com/repos/sanchitbajaj02/palettegram")
-      .then((res) => res.json())
-      .then((res) => {
-        setStars(res.stargazers_count);
-      });
+    if (accountIdFromCookies) {
+      getCurrentUser()
+        .then((resp) => {
+          if (resp) {
+            const payload = {
+              userId: resp["$id"],
+              email: resp["email"],
+              isVerified: resp["emailVerification"],
+              createdAt: resp["$createdAt"],
+            };
 
-    isLoggedIn()
-      .then((resp) => {
-        // console.log(resp);
+            dispatch(saveUser(payload));
+          }
+        })
+        .catch((err) => {
+          console.log(err);
 
-        if (resp) {
-          const payload = {
-            userId: resp["$id"],
-            email: resp["email"],
-            isVerified: resp["emailVerification"],
-            createdAt: resp["$createdAt"],
-          };
-
-          dispatch(saveUser(payload));
-        }
-      })
-      .catch(console.log);
-  }, [dispatch]);
+          toastify(err.message, "error");
+        });
+    }
+  }, [dispatch, accountIdFromCookies]);
 
   return (
     <>
@@ -80,12 +76,22 @@ function HomePage() {
           </div>
 
           {/* Desktop menu items */}
-          <div className="hidden md:flex items-center justify-center space-x-4">
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{
+              duration: 0.5,
+              type: "spring",
+              stiffness: 80,
+            }}
+            className="hidden md:flex items-center justify-center space-x-4"
+          >
             <ThemeButton iconSize={24} />
 
             <ButtonLong href="https://github.com/Sanchitbajaj02/palettegram" newTab size="normal">
               <span className="flex items-center">
-                <GitHub size={20} className="mr-2" /> {stars} Stars
+                <GitHub size={20} className="mr-2" /> {starCount} Stars
               </span>
             </ButtonLong>
 
@@ -100,7 +106,7 @@ function HomePage() {
                 </ButtonLong>
               </>
             )}
-          </div>
+          </motion.div>
 
           {/* Mobile menu */}
           {isMenuOpen && (
@@ -125,7 +131,7 @@ function HomePage() {
                   rel="noopener noreferrer"
                   className="flex items-center text-sm text-center mx-2 px-6 py-2 rounded-full bg-primary text-white"
                 >
-                  <GitHub size={20} className="mr-4" /> {stars} Stars
+                  <GitHub size={20} className="mr-4" /> {starCount} Stars
                 </Link>
 
                 {!state?.creds.userId && !state?.creds.isVerified && (
@@ -147,7 +153,7 @@ function HomePage() {
                 )}
                 {state?.creds.userId && state?.creds.isVerified && (
                   <Link
-                    href={`/user/${userIdFromCookies}`}
+                    href={`/user/${accountIdFromCookies}`}
                     className="mx-2 px-2 py-2 rounded-full bg-primary text-white"
                   >
                     <User size={22} className="transition-all duration-300 " />
@@ -162,14 +168,47 @@ function HomePage() {
       <main className="max-w-screen-lg mx-auto px-2">
         <section className="flex flex-col items-center mt-32 mb-32 gap-4 md:flex-row md:justify-between">
           <article>
-            <h1 className="text-3xl font-bold text-center tracking-wide text-secondary dark:text-white md:text-6xl md:text-left">
+            <motion.h1
+              initial={{ opacity: 0, x: 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 1,
+                type: "spring",
+                stiffness: 110,
+                delay: 0,
+              }}
+              className="text-3xl font-bold text-center tracking-wide text-secondary dark:text-white md:text-6xl md:text-left"
+            >
               Present Palettes Around the World
-            </h1>
-            <p className="text-xl my-6 font-medium text-center text-secondary dark:text-white md:text-2xl md:text-left">
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                stiffness: 110,
+                delay: 0.1,
+              }}
+              className="text-xl my-6 font-medium text-center text-secondary dark:text-white md:text-2xl md:text-left"
+            >
               Transform ideas into Beautiful Palettes, Inspire Fellow Designers.
-            </p>
+            </motion.p>
 
-            <div className="flex justify-center md:justify-start">
+            <motion.div
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                stiffness: 110,
+                delay: 0.2,
+              }}
+              className="flex justify-center md:justify-start"
+            >
               {state?.creds.userId && state?.creds.userId !== "" ? (
                 <ButtonLong href="/feed" size="big">
                   Checkout your feed
@@ -179,40 +218,85 @@ function HomePage() {
                   Start your journey
                 </ButtonLong>
               )}
-            </div>
+            </motion.div>
           </article>
 
           <figure className="w-[70%] my-4 text-center">
-            <Image
-              src="/assets/header.png"
-              alt="Header section"
-              loading="lazy"
-              width={400}
-              height={400}
-              className="custom-shadow"
-            />
+            <motion.div
+              initial={{ opacity: 0, y: -640 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                stiffness: 80,
+              }}
+            >
+              <Image
+                src="/assets/header.png"
+                alt="Header section"
+                loading="lazy"
+                width={400}
+                height={400}
+                className="custom-shadow floating-image"
+              />
+            </motion.div>
           </figure>
         </section>
 
         <section className="flex items-center flex-col-reverse md:flex-row gap-4 mt-32 mb-32">
           <figure className="w-[70%]">
-            <Image
-              src="/assets/palettegram-for.png"
-              alt="Who is palettegram for section"
-              loading="lazy"
-              width={600}
-              height={500}
-              className="mx-auto rounded"
-            />
+            <motion.div
+              initial={{ opacity: 0, x: -100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                stiffness: 80,
+                delay: 0.2,
+              }}
+            >
+              <Image
+                src="/assets/palettegram-for.png"
+                alt="Who is palettegram for section"
+                loading="lazy"
+                width={600}
+                height={500}
+                className="mx-auto rounded"
+              />
+            </motion.div>
           </figure>
           <article>
-            <h1 className="text-3xl md:text-6xl text-center font-extrabold tracking-wide text-black dark:text-white md:text-right">
+            <motion.h1
+              initial={{ opacity: 0, x: 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 1,
+                type: "spring",
+                stiffness: 80,
+                delay: 0,
+              }}
+              className="text-3xl md:text-6xl text-center font-extrabold tracking-wide text-black dark:text-white md:text-right"
+            >
               Who is <br /> Palettegram for?
-            </h1>
-            <p className="text-xl md:text-2xl text-center my-8 text-black dark:text-white md:text-right">
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, x: 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                stiffness: 80,
+                delay: 0.1,
+              }}
+              className="text-xl md:text-2xl text-center my-8 text-black dark:text-white md:text-right"
+            >
               Anyone who wants to share their designs and color palettes to get the review among the
               professionals.
-            </p>
+            </motion.p>
           </article>
         </section>
       </main>
